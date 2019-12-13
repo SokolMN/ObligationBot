@@ -30,6 +30,7 @@ public class Bot extends TelegramLongPollingBot {
     String responseString;
     final Random random = new Random();
     JSONObject jsonOutput=null;
+    String messageString; //Сообщение от пользователя
 
 
     Bot(DefaultBotOptions options){
@@ -37,6 +38,39 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     Bot(){
+    }
+
+
+
+    public void onUpdateReceived(Update update) {
+        update.getUpdateId();
+
+        SendMessage sendMessage = new SendMessage().setChatId(update.getMessage().getChatId());
+        System.out.println(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName() + ": " + update.getMessage().getText());
+
+        messageString = update.getMessage().getText();
+
+        if ("/start".equals(messageString)) {
+            setButtons(sendMessage);
+            sendMessage.setText("Что желаете сделать?");
+
+        } else if ("Привет".equals(messageString)) {
+            setBadwords();
+            sendMessage.setText("Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + getWeather());
+
+        } else if ("Получить облигацию".equals(messageString)) {
+            sendMessage.setText(getObligation());
+
+        } else {
+            sendMessage.setText("Что-то не то");
+        }
+
+
+        try{
+            execute(sendMessage);
+        }catch (TelegramApiException e){
+            e.printStackTrace();
+        }
     }
 
     public synchronized void setButtons(SendMessage sendMessage) {
@@ -60,31 +94,15 @@ public class Bot extends TelegramLongPollingBot {
         // Добавляем кнопки во вторую строчку клавиатуры
         keyboardSecondRow.add(new KeyboardButton("Получить облигацию"));
 
+        KeyboardRow keyboardThiedRow = new KeyboardRow();
+        // Добавляем кнопки во вторую строчку клавиатуры
+        keyboardSecondRow.add(new KeyboardButton("Оля ля ля"));
+
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);
         keyboard.add(keyboardSecondRow);
         // и устанваливаем этот список нашей клавиатуре
         replyKeyboardMarkup.setKeyboard(keyboard);
-    }
-
-    public void onUpdateReceived(Update update) {
-        update.getUpdateId();
-
-        SendMessage sendMessage = new SendMessage().setChatId(update.getMessage().getChatId());
-        System.out.println(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName() + ": " + update.getMessage().getText());
-        setButtons(sendMessage);
-
-        if(update.getMessage().getText().equals("Привет") ||update.getMessage().getText().equals("привет") ){
-            setBadwords();
-            sendMessage.setText("Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + getWeather());
-        }else
-            sendMessage.setText(getObligation());
-
-        try{
-            execute(sendMessage);
-        }catch (TelegramApiException e){
-            e.printStackTrace();
-        }
     }
 
     private String getObligation(){
@@ -114,6 +132,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String getWeather(){
+        ApiWorker apiWorker = new ApiWorker();
         HttpGet httpGet = new HttpGet("http://api.openweathermap.org/data/2.5/weather?q=Moscow&units=metric&appid=9be8bd474a1c675c6dd3e03bd47bc333&lang=ru");
 
 
