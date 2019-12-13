@@ -106,8 +106,8 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String getObligation(){
-        ApiWorker apiWorker = new ApiWorker();
-        jsonOutput = apiWorker.sendRequest("RU000A100HE1", "GET");
+        ApiWorker apiWorker = new ApiWorker("https://iss.moex.com/iss/securities/RU000A100HE1.json");
+        jsonOutput = apiWorker.sendRequest("GET");
 
         JSONObject descriptionOject;
         descriptionOject = (JSONObject) jsonOutput.get("description");
@@ -132,58 +132,14 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String getWeather(){
-        ApiWorker apiWorker = new ApiWorker();
-        HttpGet httpGet = new HttpGet("http://api.openweathermap.org/data/2.5/weather?q=Moscow&units=metric&appid=9be8bd474a1c675c6dd3e03bd47bc333&lang=ru");
+        ApiWorker apiWorker = new ApiWorker("http://api.openweathermap.org/data/2.5/weather?q=Moscow&units=metric&appid=9be8bd474a1c675c6dd3e03bd47bc333&lang=ru");
+        jsonOutput = apiWorker.sendRequest("GET");
+        WeatherClass weather = new WeatherClass(jsonOutput);
 
-
-        try {
-            response = httpClient.execute(httpGet);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-       // System.out.println(response.toString());
-
-        HttpEntity entity = response.getEntity(); //Этот объект нужен, чтобы вытащить данные из response
-
-        try {
-            responseString = EntityUtils.toString(entity, "UTF-8");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-       // System.out.println("Данные из GET-запроса " + responseString);
-        JSONParser parser = new JSONParser();
-
-        try {
-            jsonOutput = (JSONObject) parser.parse(responseString);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        String weatherInfo = "Кстати, погода! Сейчас за окном: " + getResponseObjData(jsonOutput, "main", "temp") + ", " + getResponseArrayData(jsonOutput, "weather", "description");
+        String weatherInfo = "Кстати, погода! Сейчас за окном: " + weather.getTemperatura() + ", " + weather.getStation();
 
         return weatherInfo;
     }
-
-    private String getResponseObjData(JSONObject jsonObject, String upName, String downName){
-        JSONObject downJsonObject = (JSONObject) jsonObject.get(upName);
-        String dataValue = downJsonObject.get(downName).toString();
-        return dataValue;
-    }
-
-    private String getResponseArrayData(JSONObject jsonObject, String upName, String downName){
-        JSONArray jsonArray = (JSONArray) jsonObject.get(upName);
-        JSONObject obj = new JSONObject();
-
-        for(int i =0; i <jsonArray.size(); i++){
-            obj = (JSONObject) jsonArray.get(i);
-
-        }
-
-        return obj.get(downName).toString();
-    }
-
-
 
     public String getBotUsername() {
         return "CoolSokolovBot";

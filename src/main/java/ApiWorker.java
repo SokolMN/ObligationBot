@@ -12,18 +12,24 @@ import java.io.IOException;
 
 public class ApiWorker {
 
+    ApiWorker(String url){
+        this.URLString = url;
+    }
 
     HttpResponse response;
     String URLString;
     String obligationName;
     HttpEntity responseEntity;
 
-    public JSONObject sendRequest(String obligationName, String methodName){
+
+
+
+    public JSONObject sendRequest(String methodName){
         System.out.println("sendRequest Mehotd");
         HttpClient httpClient = HttpClientBuilder.create().build();
         HttpGet httpGet = null;
         if(methodName.equals("GET")){
-            httpGet = new HttpGet("https://iss.moex.com/iss/securities/" + obligationName + ".json");
+            httpGet = new HttpGet(URLString);
         }
 
         try {
