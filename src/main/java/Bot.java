@@ -1,12 +1,3 @@
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -16,18 +7,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.json.simple.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 
 public class Bot extends TelegramLongPollingBot {
-    HttpClient httpClient = HttpClientBuilder.create().build();
-    HttpResponse response;
     ArrayList<String> badwords = new ArrayList<String>();
-    String responseString;
     final Random random = new Random();
     JSONObject jsonOutput=null;
     String messageString; //Сообщение от пользователя
@@ -50,17 +36,39 @@ public class Bot extends TelegramLongPollingBot {
 
         messageString = update.getMessage().getText();
 
+        UserClass user = new UserClass(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName(), update.getMessage().getChatId());
+        if(!user.isUserExists()){
+            user.createUser();
+        }
+
         if ("/start".equals(messageString)) {
             setButtons(sendMessage);
             sendMessage.setText("Что желаете сделать?");
 
         } else if ("Привет".equals(messageString)) {
             setBadwords();
-            sendMessage.setText("Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + getWeather());
+            WeatherClass weather = new WeatherClass();
+            sendMessage.setText("Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + "За окном сейчас " + weather.getTemperatura() + ", " + weather.getStation() );
 
         } else if ("Получить облигацию".equals(messageString)) {
-            sendMessage.setText(getObligation());
+            //ObligationClass obligation = new ObligationClass();
+            //sendMessage.setText(obligation.getObligationFullName() + " " + obligation.getCouponSum() + " " + obligation.getCurrency() +" " + obligation.getCouponDate());
 
+        } else if("/addobl".equals(messageString.substring(0,7))) {
+            String obligationName = messageString.substring(8);
+            ObligationClass obligation = new ObligationClass(obligationName);
+            obligation.setObligationOwner(user);
+            if(!obligation.isObligationExistForUser()){
+                obligation.createObligation();
+            }
+
+            if(obligation.getErrorFLg()){
+                sendMessage.setText(obligation.getErrorMessage());
+            }else{
+                sendMessage.setText("Вы добавили " + obligation.getObligationFullName() + "\n" +
+                        "Ближайшая дата платежа: " + obligation.getCouponDate() +
+                        " в размере " + obligation.getCouponSum() + obligation.getCurrency());
+            }
         } else {
             sendMessage.setText("Что-то не то");
         }
@@ -105,20 +113,6 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setKeyboard(keyboard);
     }
 
-    private String getObligation(){
-        ApiWorker apiWorker = new ApiWorker("https://iss.moex.com/iss/securities/RU000A100HE1.json");
-        jsonOutput = apiWorker.sendRequest("GET");
-
-        JSONObject descriptionOject;
-        descriptionOject = (JSONObject) jsonOutput.get("description");
-
-        ObligationClass obligation = new ObligationClass((JSONArray)descriptionOject.get("columns"), (JSONArray) descriptionOject.get("data"));
-        obligation.setObligationInfo();
-
-        String obligationInfo = obligation.getObligationFullName() + " " + obligation.getCouponSum() + " " + obligation.getCurrency() +" " + obligation.getCouponDate();
-
-        return obligationInfo;
-    }
 
     private void setBadwords(){
         badwords.add(", кстати, иди нахуй");
@@ -131,15 +125,7 @@ public class Bot extends TelegramLongPollingBot {
         badwords.add(" красотка!");
     }
 
-    private String getWeather(){
-        ApiWorker apiWorker = new ApiWorker("http://api.openweathermap.org/data/2.5/weather?q=Moscow&units=metric&appid=9be8bd474a1c675c6dd3e03bd47bc333&lang=ru");
-        jsonOutput = apiWorker.sendRequest("GET");
-        WeatherClass weather = new WeatherClass(jsonOutput);
 
-        String weatherInfo = "Кстати, погода! Сейчас за окном: " + weather.getTemperatura() + ", " + weather.getStation();
-
-        return weatherInfo;
-    }
 
     public String getBotUsername() {
         return "CoolSokolovBot";

@@ -1,17 +1,19 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+
 public class WeatherClass {
 
     private JSONObject weatherJsonObj;
     private String temperatura; //Температура
     private String station;     //Состояние (дождь, снег, пасмурно)
 
-    WeatherClass(JSONObject obj){
-        this.weatherJsonObj = obj;
+    WeatherClass(){
+        ApiWorker apiWorker = new ApiWorker("http://api.openweathermap.org/data/2.5/weather?q=Moscow&units=metric&appid=9be8bd474a1c675c6dd3e03bd47bc333&lang=ru");
+        weatherJsonObj = apiWorker.sendRequest("GET");
     }
-
-
 
     private String getResponseObjData(String upName, String downName){
         JSONObject downJsonObject = (JSONObject) weatherJsonObj.get(upName);
