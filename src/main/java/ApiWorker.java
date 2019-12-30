@@ -18,11 +18,6 @@ public class ApiWorker {
 
     HttpResponse response;
     String URLString;
-    String obligationName;
-    HttpEntity responseEntity;
-
-
-
 
     public JSONObject sendRequest(String methodName){
         System.out.println("sendRequest Mehotd");

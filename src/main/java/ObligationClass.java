@@ -1,9 +1,7 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
 
 public class ObligationClass {
 
@@ -17,16 +15,29 @@ public class ObligationClass {
     private Integer obligationId;
     private String errorMessage;
     private boolean errorfFlg;
+    private String obligationCode;
+    private Integer quantity; //Количество облигаций
     HashMap <String, ObligationInfo> obligationInfoMap = new HashMap();
 
-    public ObligationClass(String name) {
-        ApiWorker apiWorker = new ApiWorker("https://iss.moex.com/iss/securities/" + name + ".json");
+
+    public ObligationClass(String code, int quantity) {
+        ApiWorker apiWorker = new ApiWorker("https://iss.moex.com/iss/securities/" + code + ".json");
         JSONObject descObj = (JSONObject) apiWorker.sendRequest("GET").get("description");
         this.columnArray = (JSONArray) descObj.get("columns");
         this.dataArray = (JSONArray) descObj.get("data");
+        this.obligationCode = code;
+        this.quantity = quantity;
         setObligationInfo();
     }
 
+    public ObligationClass(String oblCode, Integer quantity,String couponSum, String couponDate, String oblFullName, String currency ){
+        this.obligationCode = oblCode;
+        this.quantity = quantity;
+        this.couponSum = couponSum;
+        this.couponDate = couponDate;
+        this.obligationFullName = oblFullName;
+        this.currency = currency;
+    }
 
     public boolean isObligationExistForUser(){
         DBWorker dbWorker = new DBWorker();
@@ -50,6 +61,8 @@ public class ObligationClass {
         columnNames.add("COUPON_SUM");
         columnNames.add("USER_ID");
         columnNames.add("CURRENCY");
+        columnNames.add("CODE");
+        columnNames.add("QUANTITY");
 
         ArrayList columnValues = new ArrayList();
         columnValues.add("'" + this.getObligationFullName() + "'");
@@ -57,8 +70,32 @@ public class ObligationClass {
         columnValues.add(this.getCouponSum());
         columnValues.add(this.obligationOwner.getUserId());
         columnValues.add("'" + this.getCurrency() + "'");
+        columnValues.add("'" + this.obligationCode + "'");
+        columnValues.add("'" + this.quantity+ "'");
 
         dbWorker.insertRecord(columnNames, columnValues, "Obligation");
+    }
+
+
+    public void updateObligation(HashMap<String, String> updateMap, HashMap<String, String> reqMap ){
+        DBWorker dbWorker = new DBWorker();
+        String stringUpdate;
+        stringUpdate = "Update OBLIGATION SET ";
+
+        for (String key: updateMap.keySet()){
+            stringUpdate = stringUpdate + key + "= '" + updateMap.get(key) + "',";
+        }
+
+        stringUpdate = stringUpdate.substring(0, stringUpdate.length()-1) + " WHERE ";
+
+
+        for (String key: reqMap.keySet()){
+            stringUpdate = stringUpdate + key + "= '" + reqMap.get(key) + "' AND ";
+        }
+        stringUpdate = stringUpdate.substring(0, stringUpdate.length()-5);
+
+        dbWorker.updateRecord(stringUpdate);
+
     }
 
     public void setObligationInfo(){
@@ -69,23 +106,33 @@ public class ObligationClass {
         }
     }
 
+
+
     public String getCurrency() {
-        currency = obligationInfoMap.get("FACEUNIT").getValue();
+        if(currency == null){
+            currency = obligationInfoMap.get("FACEUNIT").getValue();
+        }
         return currency;
     }
 
     public String getCouponSum() {
-        couponSum = obligationInfoMap.get("COUPONVALUE").getValue();
+        if(couponSum == null){
+            couponSum = obligationInfoMap.get("COUPONVALUE").getValue();
+        }
         return couponSum;
     }
 
     public String getObligationFullName() {
-        obligationFullName = obligationInfoMap.get("NAME").getValue();
+        if(obligationFullName == null){
+            obligationFullName = obligationInfoMap.get("NAME").getValue();
+        }
         return obligationFullName;
     }
 
     public String getCouponDate() {
-        couponDate = obligationInfoMap.get("COUPONDATE").getValue();
+        if(couponDate == null){
+            couponDate = obligationInfoMap.get("COUPONDATE").getValue();
+        }
         return couponDate;
     }
 
@@ -101,4 +148,37 @@ public class ObligationClass {
         return this.errorfFlg;
     }
 
+    public String getObligationCode(){
+        return this.obligationCode;
+    }
+
+    public Integer getQuantity(){
+        return this.quantity;
+    }
+
+    public String getConvertedCurrency(){
+        String convertedCurrency;
+        if(this.currency == null){
+            convertedCurrency = obligationInfoMap.get("FACEUNIT").getValue();
+        }else{
+            convertedCurrency = this.currency;
+        }
+        if(convertedCurrency.equals("SUR")){
+            return "RUB";
+        }else{
+            return convertedCurrency;
+        }
+    }
+
+    public String getConvertedCouponDate(){
+        if(couponDate !=null){
+            return this.couponDate.substring(this.couponDate.length()-2) + "-"+
+                    this.couponDate.substring(5, 7) +"-" + this.couponDate.substring(0,4);
+        }else{
+            return obligationInfoMap.get("COUPONDATE").getValue().substring(this.couponDate.length()-2) + "."+
+                    obligationInfoMap.get("COUPONDATE").getValue().substring(5, 7) +"." + obligationInfoMap.get("COUPONDATE").getValue().substring(0,4);
+        }
+
+
+    }
 }

@@ -31,6 +31,7 @@ public class DBWorker {
         }
     }
 
+
     private void createStatement(){
 
         try {
@@ -63,13 +64,6 @@ public class DBWorker {
 
         insert = "INSERT INTO " + tableName + " (" + colNames.substring(0, colNames.length()-1) + ") VALUES (" + colValues.substring(0, colValues.length()-1) + ");";
 
-        /*try {
-            statement.execute(insert);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            closeConnection();
-        }*/
-
         PreparedStatement ps;
         try {
             ps = connection.prepareStatement(insert,
@@ -91,7 +85,6 @@ public class DBWorker {
     public Integer isHaveSelectedRecord(String selectString){
         createStatement();
         int row_id=0;
-        //boolean isRecords=false;
         try {
             resultSet = statement.executeQuery(selectString);
             if(resultSet.next()){
@@ -108,6 +101,27 @@ public class DBWorker {
             }
         }
         return row_id;
+    }
+
+    public ResultSet selectRecord(String selectString){
+
+        createStatement();
+        try {
+            resultSet = statement.executeQuery(selectString);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            closeConnection();
+        }
+        return resultSet;
+    }
+
+    public void updateRecord(String updateString){
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(updateString);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
