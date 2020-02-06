@@ -6,7 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.json.simple.JSONObject;
+
 
 import java.sql.SQLException;
 import java.util.*;
@@ -15,8 +15,10 @@ import java.util.*;
 public class Bot extends TelegramLongPollingBot {
     ArrayList<String> badwords = new ArrayList<String>();
     final Random random = new Random();
-    JSONObject jsonOutput=null;
     String messageString; //Сообщение от пользователя
+    UserClass user;
+    SendMessage sendMessage;
+    ChatBot chatBot;
 
 
     Bot(DefaultBotOptions options){
@@ -24,78 +26,74 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     Bot(){
+        chatBot = new ChatBot();
     }
 
     public void onUpdateReceived(Update update) {
-        update.getUpdateId();
 
-        SendMessage sendMessage = new SendMessage().setChatId(update.getMessage().getChatId());
+        update.getUpdateId();
+        ChatBotReply reply;
+
+
+        sendMessage = new SendMessage().setChatId(update.getMessage().getChatId());
         System.out.println(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName() + ": " + update.getMessage().getText());
+
+        chatBot.setChatId(update.getMessage().getChatId().toString());
+        chatBot.setIncomeMessage(update.getMessage().getText());
+
 
         messageString = update.getMessage().getText();
 
-        UserClass user = new UserClass(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName(), update.getMessage().getChatId());
+        user = new UserClass(update.getMessage().getFrom().getFirstName() + " " + update.getMessage().getFrom().getLastName(), update.getMessage().getChatId());
         if(!user.isUserExists()){
             user.createUser();
         }
+        chatBot.setUser(user);
 
-        if ("/start".equals(messageString)) {
-            setButtons(sendMessage);
-            sendMessage.setText("Ну давай начнем. Что доступно \n" +
-                                "1.Можно добавить облигацию, через команду /addobl\n" +
-                                "2.Можно получить список выплат по вашим облигациям, нажав кнопку 'Список выплат по облигациям'. Для этого сначала надо добавить их (п. 1)\n" +
-                                "3.Узнать текущую погоду за окном, нажав кнопку 'Погода'");
-
-        } else if ("Погода".equals(messageString)) {
-            setBadwords();
-            WeatherClass weather = new WeatherClass();
-            sendMessage.setText("Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + "За окном сейчас " + weather.getTemperatura() + ", " + weather.getStation() );
-            ObligationClass obligation = new ObligationClass("RU000A100HE1", 2);
-            obligation.setObligationOwner(user);
-        } else if ("Список выплат по облигациям".equals(messageString)) {
-            try {
-                sendMessage.setText(user.getUserPayments());
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-        } else if("/addobl".equals(messageString.substring(0,7))) {
-            try{
-                String obligationCode = messageString.substring(8);
-                Integer quantity = messageString.lastIndexOf(" ");
-                ObligationClass obligation = new ObligationClass(obligationCode, quantity);
-
-                obligation.setObligationOwner(user);
-                if(!obligation.isObligationExistForUser()){
-                    obligation.createObligation();
+        switch (messageString){
+            case "/start":
+                setButtons(sendMessage);
+                doSendMessage(sendMessage, null,
+                "Ну давай начнем. Что доступно \n" +
+                        "1.Можно добавить облигацию, через команду /addobl\n" +
+                        "2.Можно получить список выплат по вашим облигациям, нажав кнопку 'Список выплат по облигациям'. Для этого сначала надо добавить их (п. 1)\n" +
+                        "3.Узнать текущую погоду за окном, нажав кнопку 'Погода'");
+                break;
+            case "Погода":
+                setBadwords();
+                WeatherClass weather = new WeatherClass();
+                doSendMessage(sendMessage, null, "Привет" + badwords.get(random.nextInt(badwords.size())) + "! " + "За окном сейчас " + weather.getTemperatura() + ", " + weather.getStation() );
+                break;
+            case "Список выплат по облигациям":
+                try {
+                    doSendMessage(sendMessage, null, user.getUserPayments());
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-
-                if(obligation.getErrorFLg()){
-                    sendMessage.setText(obligation.getErrorMessage());
-                }else{
-                    sendMessage.setText("Вы добавили " + obligation.getObligationFullName() + "\n" +
-                            "Ближайшая дата платежа: " + obligation.getCouponDate() +
-                            " в размере " + obligation.getCouponSum() + obligation.getCurrency());
-                }
-            }catch (StringIndexOutOfBoundsException e){
-                sendMessage.setText("Похоже, вы неверно ввели команду для добавления облигации. \n" +
-                        "Формат команды:" +
-                        " /addobl [Код облигации]\n" +
-                        "Например: /addobl RU000A100HE1");
-            }
-        } else {
-            sendMessage.setText("Что-то не то");
+                break;
+            default:
+                reply = chatBot.answer();
+                doSendMessage(sendMessage, reply.replyKeyboardMarkup, reply.sendMsgText);
+                break;
         }
 
+    }
 
-        try{
+    public void doSendMessage(SendMessage sendMessage, ReplyKeyboardMarkup keybord, String sendMsgText){
+        sendMessage.setText(sendMsgText);
+        if(keybord != null)
+            sendMessage.setReplyMarkup(keybord);
+
+        try {
             execute(sendMessage);
-        }catch (TelegramApiException e){
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized void setButtons(SendMessage sendMessage) {
+
+
+    public void setButtons(SendMessage sendMessage) {
         // Создаем клавиуатуру
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
@@ -110,15 +108,14 @@ public class Bot extends TelegramLongPollingBot {
         KeyboardRow keyboardFirstRow = new KeyboardRow();
         // Добавляем кнопки в первую строчку клавиатуры
         keyboardFirstRow.add(new KeyboardButton("Погода"));
+        keyboardFirstRow.add(new KeyboardButton("Добавить облигацию"));
+
 
         // Вторая строчка клавиатуры
         KeyboardRow keyboardSecondRow = new KeyboardRow();
         // Добавляем кнопки во вторую строчку клавиатуры
         keyboardSecondRow.add(new KeyboardButton("Список выплат по облигациям"));
-
-        KeyboardRow keyboardThiedRow = new KeyboardRow();
-        // Добавляем кнопки во вторую строчку клавиатуры
-        keyboardSecondRow.add(new KeyboardButton("Оля ля ля"));
+        keyboardSecondRow.add(new KeyboardButton("Изменить облигацию"));
 
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);

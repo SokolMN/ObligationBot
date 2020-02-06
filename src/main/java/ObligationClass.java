@@ -100,9 +100,14 @@ public class ObligationClass {
 
     public void setObligationInfo(){
         JSONArray tempArray;
-        for (int i=0; i<dataArray.size(); i++){
-            tempArray = (JSONArray) dataArray.get(i);
-            obligationInfoMap.put(tempArray.get(0).toString(), new ObligationInfo(tempArray.get(0).toString(), tempArray.get(1).toString(), tempArray.get(2).toString()));
+        if(dataArray.size()>0){
+            for (int i=0; i<dataArray.size(); i++){
+                tempArray = (JSONArray) dataArray.get(i);
+                obligationInfoMap.put(tempArray.get(0).toString(), new ObligationInfo(tempArray.get(0).toString(), tempArray.get(1).toString(), tempArray.get(2).toString()));
+            }
+        }else {
+            this.errorfFlg = true;
+            this.errorMessage = "Не удалось найти введенную вами облигацию: " + this.obligationCode + ". Введите другой код облигации";
         }
     }
 
@@ -172,8 +177,9 @@ public class ObligationClass {
 
     public String getConvertedCouponDate(){
         if(couponDate !=null){
-            return this.couponDate.substring(this.couponDate.length()-2) + "-"+
-                    this.couponDate.substring(5, 7) +"-" + this.couponDate.substring(0,4);
+            return (this.couponDate.substring(this.couponDate.length()-2) + "-"+
+                    this.couponDate.substring(5, 7) +"-" + this.couponDate.substring(0,4)).replace("-", ".");
+
         }else{
             return obligationInfoMap.get("COUPONDATE").getValue().substring(this.couponDate.length()-2) + "."+
                     obligationInfoMap.get("COUPONDATE").getValue().substring(5, 7) +"." + obligationInfoMap.get("COUPONDATE").getValue().substring(0,4);

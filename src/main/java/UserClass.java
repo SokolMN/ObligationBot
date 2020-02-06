@@ -1,10 +1,14 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
+import static java.lang.Double.compare;
 import static java.lang.Double.parseDouble;
 
 public class UserClass {
@@ -41,17 +45,15 @@ public class UserClass {
     }
 
     public String getUserPayments() throws SQLException {
-        /*Как надо сделать!!!!!!!!
-            1. Сделать новый конструктор с полями из БД
-            2. Понасоздавать объекты ObligationClass в ArrayList с полями из БД
-            3. Сравнить даты, и если надо, то вызвать API, чтобы обновить информацию
-         */
+
         ArrayList<ObligationClass> oblArray = new ArrayList<ObligationClass>();
         Date couponDate=null;
         Date currentDate = new Date();
         HashMap<String, String> updateMap = new HashMap<String, String>();
         HashMap<String, String> reqMap = new HashMap<String, String>();
         String totalPayments="";
+        double totalSumByLastDate=0; //Полная сумма к последней дате всех купонов
+        String lastDateOffAllCoupons=""; //Последняя дата из всех ближайших дат
 
         DBWorker dbWorker = new DBWorker();
         dbWorker.selectRecord("select name, coupon_date, CURRENCY, code,coupon_Date, QUANTITY, coupon_sum from obligation  where user_id = '"
@@ -64,6 +66,8 @@ public class UserClass {
                     dbWorker.resultSet.getString("COUPON_DATE"),
                     dbWorker.resultSet.getString("NAME"),
                     dbWorker.resultSet.getString("CURRENCY")));
+                    lastDateOffAllCoupons = dbWorker.resultSet.getString("COUPON_DATE");
+                  //  totalSumByLastDate = totalSumByLastDate + Double.parseDouble(dbWorker.resultSet.getString("coupon_sum"))*dbWorker.resultSet.getInt("QUANTITY");
         }
 
         int i=1;
@@ -85,12 +89,33 @@ public class UserClass {
             }
             totalPayments = totalPayments + i + ".Название: " + obligation.getObligationFullName() + "\n" +
                                                 "     Дата выплаты: " + obligation.getConvertedCouponDate()  + "\n" +
-                                                "     Сумма выплаты: " + parseDouble(obligation.getCouponSum())*obligation.getQuantity() + " " + obligation.getConvertedCurrency() + "\n" ;
+                                                "     Сумма выплаты: " + new BigDecimal(parseDouble(obligation.getCouponSum())*obligation.getQuantity()).setScale(2, RoundingMode.UP) + " " + obligation.getConvertedCurrency() + "\n" ;
             i++;
+            lastDateOffAllCoupons = obligation.getConvertedCouponDate();
+            totalSumByLastDate = totalSumByLastDate + (parseDouble(obligation.getCouponSum())*obligation.getQuantity());
         }
 
-
+        totalPayments = totalPayments + "\n" + "Итого к " + lastDateOffAllCoupons + ": " + new BigDecimal(totalSumByLastDate).setScale(2, RoundingMode.UP);
         return totalPayments;
+    }
+
+    public String getUserObligationList(){
+        String oblData="";
+
+        DBWorker dbWorker = new DBWorker();
+        dbWorker.selectRecord("select ROW_ID, NAME, QUANTITY from obligation where user_id = '" + this.userId + "'");
+
+        try {
+            while (dbWorker.resultSet.next()) {
+                oblData = oblData + "Номер: " + dbWorker.resultSet.getString("ROW_ID") + "\n"
+                        + "Название: " + dbWorker.resultSet.getString("NAME") + "\n"
+                        + "Количество: " + dbWorker.resultSet.getInt("QUANTITY") + "\n\n";
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
+        return oblData;
     }
 
     public Long getChatId(){
