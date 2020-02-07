@@ -45,7 +45,6 @@ public class ApiWorker {
             e.printStackTrace();
             jsonOutput = null;
         }
-
         return jsonOutput;
     }
 

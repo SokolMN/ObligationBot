@@ -4,11 +4,9 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
-import static java.lang.Double.compare;
 import static java.lang.Double.parseDouble;
 
 public class UserClass {
@@ -67,7 +65,6 @@ public class UserClass {
                     dbWorker.resultSet.getString("NAME"),
                     dbWorker.resultSet.getString("CURRENCY")));
                     lastDateOffAllCoupons = dbWorker.resultSet.getString("COUPON_DATE");
-                  //  totalSumByLastDate = totalSumByLastDate + Double.parseDouble(dbWorker.resultSet.getString("coupon_sum"))*dbWorker.resultSet.getInt("QUANTITY");
         }
 
         int i=1;
@@ -99,25 +96,6 @@ public class UserClass {
         return totalPayments;
     }
 
-    public String getUserObligationList(){
-        String oblData="";
-
-        DBWorker dbWorker = new DBWorker();
-        dbWorker.selectRecord("select ROW_ID, NAME, QUANTITY from obligation where user_id = '" + this.userId + "'");
-
-        try {
-            while (dbWorker.resultSet.next()) {
-                oblData = oblData + "Номер: " + dbWorker.resultSet.getString("ROW_ID") + "\n"
-                        + "Название: " + dbWorker.resultSet.getString("NAME") + "\n"
-                        + "Количество: " + dbWorker.resultSet.getInt("QUANTITY") + "\n\n";
-            }
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-
-        return oblData;
-    }
-
     public Long getChatId(){
         return this.chatId;
     }
@@ -125,6 +103,4 @@ public class UserClass {
     public Integer getUserId(){
         return this.userId;
     }
-
-
 }

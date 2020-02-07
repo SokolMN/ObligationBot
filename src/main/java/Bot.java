@@ -55,7 +55,7 @@ public class Bot extends TelegramLongPollingBot {
                 setButtons(sendMessage);
                 doSendMessage(sendMessage, null,
                 "Ну давай начнем. Что доступно \n" +
-                        "1.Можно добавить облигацию, через команду /addobl\n" +
+                        "1.Можно добавить облигацию\n" +
                         "2.Можно получить список выплат по вашим облигациям, нажав кнопку 'Список выплат по облигациям'. Для этого сначала надо добавить их (п. 1)\n" +
                         "3.Узнать текущую погоду за окном, нажав кнопку 'Погода'");
                 break;
@@ -76,7 +76,6 @@ public class Bot extends TelegramLongPollingBot {
                 doSendMessage(sendMessage, reply.replyKeyboardMarkup, reply.sendMsgText);
                 break;
         }
-
     }
 
     public void doSendMessage(SendMessage sendMessage, ReplyKeyboardMarkup keybord, String sendMsgText){

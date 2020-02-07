@@ -1,5 +1,3 @@
-import jdk.nashorn.internal.runtime.regexp.joni.encoding.CharacterType;
-
 import java.util.HashMap;
 
 public class ChatBot {
@@ -72,9 +70,8 @@ public class ChatBot {
                             obligation.createObligation();
                         }
 
-
                         if(obligation.getErrorFLg()){
-                            reply.setSendMsgText(obligation.getErrorMessage() + "\n Для выхода нажмите Домой");
+                            reply.setSendMsgText(obligation.getErrorMessage() + "\nДля выхода нажмите Домой");
                         }else{
                             reply.setSendMsgText("Вы добавили " + obligation.getObligationFullName() + "\n" +
                                     "Ближайшая дата платежа: " + obligation.getConvertedCouponDate() +
@@ -85,15 +82,12 @@ public class ChatBot {
                         statesUserMap.remove(chatId);
                         reply.setSendMsgText("Для продолжения нажмите кнопку");
                         reply.setStartKeyboard();
+                    }else{
+                        reply.setSendMsgText("Вы ввели некорректное значение. Введите код облигации и колиество. Например RU00012BK0S 5. Для возврата нажмите кнопку Домой");
+                        reply.setgoHomeKeyBoard();
                     }
-
             }
         }
         return reply;
     }
-
-    private void setHomeAnswer(){
-
-    }
-
 }

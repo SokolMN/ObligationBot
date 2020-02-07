@@ -95,7 +95,6 @@ public class ObligationClass {
         stringUpdate = stringUpdate.substring(0, stringUpdate.length()-5);
 
         dbWorker.updateRecord(stringUpdate);
-
     }
 
     public void setObligationInfo(){
@@ -184,7 +183,6 @@ public class ObligationClass {
             return obligationInfoMap.get("COUPONDATE").getValue().substring(this.couponDate.length()-2) + "."+
                     obligationInfoMap.get("COUPONDATE").getValue().substring(5, 7) +"." + obligationInfoMap.get("COUPONDATE").getValue().substring(0,4);
         }
-
 
     }
 }
