@@ -42,6 +42,25 @@ public class UserClass {
         userId = dbWorker.insertRecord(columnNames, columnValues, "USER");
     }
 
+    public String getUserObligationList(){
+        String oblList="";
+        int i = 1;
+        DBWorker dbWorker = new DBWorker();
+        dbWorker.selectRecord("select name, code, quantity from obligation where user_id = '" + this.userId + "'" );
+
+            try {
+                while (dbWorker.resultSet.next()) {
+                    oblList = oblList + i + ". Название: "  + dbWorker.resultSet.getString("NAME") + "\n" +
+                              "Код:" + dbWorker.resultSet.getString("CODE") + "\n" +
+                              "Количество:" + dbWorker.resultSet.getString("QUANTITY") + "\n";
+                    i++;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        return oblList;
+    }
+
     public String getUserPayments() throws SQLException {
 
         ArrayList<ObligationClass> oblArray = new ArrayList<ObligationClass>();

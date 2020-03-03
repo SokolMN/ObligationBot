@@ -6,6 +6,7 @@ public class ChatBot {
     protected final String inAddObligation = "Добавление облигации";
     protected final String addObligation = "Добавить облигацию";
     protected final String goHome = "Домой";
+
     HashMap<String, String> statesUserMap = new HashMap<String, String>(); //Мапа состояний, в которых находятся пользователи (ChatId - State)
     String incomeMessage; //Пришедшее сообщение
     String chatId; //Id чата с пользователем
@@ -33,7 +34,7 @@ public class ChatBot {
             switch (incomeMessage){
                 case changeObligation:
                     statesUserMap.put(chatId, inChangeObligation);
-                    reply.setSendMsgText("Для изменения облигации введите её код и количество");
+                    reply.setSendMsgText(user.getUserObligationList() + "\nДля изменения облигации введите её код и количество");
                     reply.setgoHomeKeyBoard();
                     break;
                 case goHome:
@@ -55,7 +56,21 @@ public class ChatBot {
                         reply.setSendMsgText("Для продолжения нажмите кнопку");
                         reply.setStartKeyboard();
                     } else {
-                        System.out.println("Мы находимся в изменении облигации, но она еще не доработана");
+
+                        ObligationClass obligation = new ObligationClass(incomeMessage.substring(0, incomeMessage.indexOf(" ")), incomeMessage.indexOf(" ")+1);
+                        HashMap<String, String> fieldmap = new HashMap<>();
+                        fieldmap.put("QUANTITY",incomeMessage.substring(incomeMessage.indexOf(" ")+1) );
+
+                        HashMap<String, String> reqmap = new HashMap<>();
+                        reqmap.put("CODE", incomeMessage.substring(0, incomeMessage.indexOf(" ")));
+                        reqmap.put("USER_ID", user.getUserId().toString());
+
+                        obligation.updateObligation(fieldmap, reqmap);
+
+                        if(!obligation.getErrorFLg()){
+                            reply.setSendMsgText("Операция прошла успешно. Обновите другую облигацию или вернитесь домой");
+                            reply.setgoHomeKeyBoard();
+                        }
                     }
                     break;
                 case inAddObligation:

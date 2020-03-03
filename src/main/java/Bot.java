@@ -125,13 +125,8 @@ public class Bot extends TelegramLongPollingBot {
 
 
     private void setBadwords(){
-        badwords.add(", кстати, иди нахуй");
-        badwords.add(" приёмный");
-        badwords.add(" жиробас");
+        badwords.add(", желаю успехов!");
         badwords.add(" красавчик");
-        badwords.add(" фемка");
-        badwords.add(". Ты пидор!");
-        badwords.add(" девка без руки, какого хрена");
         badwords.add(" красотка!");
     }
 
