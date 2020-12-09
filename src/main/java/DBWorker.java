@@ -1,5 +1,7 @@
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DBWorker {
     Connection connection;
@@ -12,7 +14,7 @@ public class DBWorker {
     public DBWorker(){
          this.DBurl = "jdbc:mysql://localhost/telegramBot?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
          this.DBName = "root";
-         this.DBpassword = "050493";
+         this.DBpassword = "l050493h";
          createConnection();
     }
 
@@ -80,6 +82,35 @@ public class DBWorker {
             e.printStackTrace();
         }
         return createdRowId;
+    }
+
+
+
+    public void deleteRecord(String tableName, HashMap<String, String> tableColumnValues){
+        createStatement();
+        String colNames="";
+        String colValues="";
+        String delete;
+
+        delete = "DELETE FROM " + tableName + " WHERE ";
+
+        for(Map.Entry<String, String> entry : tableColumnValues.entrySet()){
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+            delete = delete +  entry.getKey().toString() + "= '" + entry.getValue().toString() + "' AND ";
+        }
+
+        delete = delete.substring(0, delete.length()-4);
+
+        System.out.println("Запрос для удаления записи: " + delete);
+
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(delete);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public Integer isHaveSelectedRecord(String selectString){

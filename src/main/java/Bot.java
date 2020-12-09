@@ -106,19 +106,26 @@ public class Bot extends TelegramLongPollingBot {
         // Первая строчка клавиатуры
         KeyboardRow keyboardFirstRow = new KeyboardRow();
         // Добавляем кнопки в первую строчку клавиатуры
-        keyboardFirstRow.add(new KeyboardButton("Погода"));
+       // keyboardFirstRow.add(new KeyboardButton("Погода"));
+
         keyboardFirstRow.add(new KeyboardButton("Добавить облигацию"));
+        keyboardFirstRow.add(new KeyboardButton("Удалить облигацию"));
 
 
         // Вторая строчка клавиатуры
         KeyboardRow keyboardSecondRow = new KeyboardRow();
         // Добавляем кнопки во вторую строчку клавиатуры
         keyboardSecondRow.add(new KeyboardButton("Список выплат по облигациям"));
-        keyboardSecondRow.add(new KeyboardButton("Изменить облигацию"));
+        keyboardSecondRow.add(new KeyboardButton("Изменить кол-ва облигаций"));
+
+        // Добавляем кнопки в третью строчку клавиатуры
+        KeyboardRow keyboardThirdRow = new KeyboardRow();
+        keyboardThirdRow.add(new KeyboardButton("Погода"));
 
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);
         keyboard.add(keyboardSecondRow);
+        keyboard.add(keyboardThirdRow);
         // и устанваливаем этот список нашей клавиатуре
         replyKeyboardMarkup.setKeyboard(keyboard);
     }

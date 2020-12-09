@@ -6,6 +6,8 @@ public class ChatBot {
     protected final String inAddObligation = "Добавление облигации";
     protected final String addObligation = "Добавить облигацию";
     protected final String goHome = "Домой";
+    protected final String deleteObligation = "Удалить облигацию";
+    protected final String inDeleteObligation = "Удаление облигации";
 
     HashMap<String, String> statesUserMap = new HashMap<String, String>(); //Мапа состояний, в которых находятся пользователи (ChatId - State)
     String incomeMessage; //Пришедшее сообщение
@@ -47,6 +49,11 @@ public class ChatBot {
                     reply.setSendMsgText("Для добавления облигации введите её код и количество");
                     reply.setgoHomeKeyBoard();
                     break;
+                case deleteObligation:
+                    statesUserMap.put(chatId,inDeleteObligation);
+                    reply.setSendMsgText(user.getUserObligationList() + "\nДля удаления облигации введите ее код");
+                    reply.setgoHomeKeyBoard();
+                    break;
             }
         }else {
             switch (statesUserMap.get(chatId)) {
@@ -58,10 +65,10 @@ public class ChatBot {
                     } else {
 
                         ObligationClass obligation = new ObligationClass(incomeMessage.substring(0, incomeMessage.indexOf(" ")), incomeMessage.indexOf(" ")+1);
-                        HashMap<String, String> fieldmap = new HashMap<>();
+                        HashMap<String, String> fieldmap = new HashMap<String, String>();
                         fieldmap.put("QUANTITY",incomeMessage.substring(incomeMessage.indexOf(" ")+1) );
 
-                        HashMap<String, String> reqmap = new HashMap<>();
+                        HashMap<String, String> reqmap = new HashMap<String, String>();
                         reqmap.put("CODE", incomeMessage.substring(0, incomeMessage.indexOf(" ")));
                         reqmap.put("USER_ID", user.getUserId().toString());
 
@@ -75,7 +82,7 @@ public class ChatBot {
                     break;
                 case inAddObligation:
                     if (incomeMessage.matches(".*\\s\\d*")){
-                        System.out.println("Ввели облигацию");
+                        System.out.println("Ввели облигацию " + incomeMessage);
                         String obligationCode = incomeMessage.substring(0, incomeMessage.lastIndexOf(" "));
                         int quantity = Integer.parseInt(incomeMessage.substring(incomeMessage.lastIndexOf(" ")+1));
                         ObligationClass obligation = new ObligationClass(obligationCode, quantity);
@@ -98,9 +105,31 @@ public class ChatBot {
                         reply.setSendMsgText("Для продолжения нажмите кнопку");
                         reply.setStartKeyboard();
                     }else{
-                        reply.setSendMsgText("Вы ввели некорректное значение. Введите код облигации и колиество. Например RU00012BK0S 5. Для возврата нажмите кнопку Домой");
+                        reply.setSendMsgText("Вы ввели некорректное значение. Введите код облигации и количество. Например RU00012BK0S 5. Для возврата нажмите кнопку Домой");
                         reply.setgoHomeKeyBoard();
                     }
+                    break;
+                case inDeleteObligation:
+                    String obligationCode = incomeMessage;
+                    ObligationClass obligation = new ObligationClass(obligationCode);
+
+                    if(incomeMessage.equals(goHome)){
+                        statesUserMap.remove(chatId);
+                        reply.setSendMsgText("Для продолжения нажмите кнопку");
+                        reply.setStartKeyboard();
+                    }else{
+                        obligation.setObligationOwner(user);
+                        if(obligation.isObligationExistForUser() ){
+                            obligation.deleteObligation();
+                            reply.setSendMsgText("Вы успешно удалили облигацию. Введите новый код или нажмите Домой");
+                            reply.setgoHomeKeyBoard();
+                        }else{
+                            reply.setSendMsgText("Введенной облигиции нет в вашем списке. Введите корректный код из списка");
+                            reply.setgoHomeKeyBoard();
+                        }
+
+                    }
+                    break;
             }
         }
         return reply;

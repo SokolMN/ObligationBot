@@ -1,5 +1,7 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import java.awt.image.AreaAveragingScaleFilter;
 import java.util.*;
 
 
@@ -39,11 +41,15 @@ public class ObligationClass {
         this.currency = currency;
     }
 
+    public ObligationClass(String oblCode){
+        this.obligationCode = oblCode;
+    }
+
     public boolean isObligationExistForUser(){
         DBWorker dbWorker = new DBWorker();
         boolean existFlg = false;
         obligationId = dbWorker.isHaveSelectedRecord("select * from obligation where user_id = '" + obligationOwner.getUserId() +
-                "' AND NAME='" + this.getObligationFullName() + "'");
+                "' AND CODE='" + this.getObligationCode() + "'");
 
         if(obligationId >0){
             existFlg = true;
@@ -74,6 +80,17 @@ public class ObligationClass {
         columnValues.add("'" + this.quantity+ "'");
 
         dbWorker.insertRecord(columnNames, columnValues, "Obligation");
+    }
+
+    public void deleteObligation(){
+        DBWorker dbWorker = new DBWorker();
+        HashMap<String, String> deleteMap = new HashMap();
+
+        deleteMap.put("CODE", this.obligationCode);
+        deleteMap.put("USER_ID", obligationOwner.getUserId().toString());
+
+
+        dbWorker.deleteRecord("Obligation", deleteMap);
     }
 
 
