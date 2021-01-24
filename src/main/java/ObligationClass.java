@@ -170,7 +170,7 @@ public class ObligationClass {
     }
 
     public String getObligationCode(){
-        return this.obligationCode;
+         return this.obligationCode;
     }
 
     public Integer getQuantity(){

@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Bot extends TelegramLongPollingBot {
@@ -79,15 +81,38 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public void doSendMessage(SendMessage sendMessage, ReplyKeyboardMarkup keybord, String sendMsgText){
-        sendMessage.setText(sendMsgText);
-        if(keybord != null)
-            sendMessage.setReplyMarkup(keybord);
 
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+        ArrayList<String> arrMsg = new ArrayList<>();
+        Pattern p = Pattern.compile("40\\..*");
+        Matcher m = p.matcher(sendMsgText);
+
+
+        if(m.find()){
+            arrMsg.add(sendMsgText.substring(0, sendMsgText.indexOf("40.")));
+            arrMsg.add(sendMsgText.substring(sendMsgText.indexOf("40.")));
+            for (String str : arrMsg){
+                sendMessage.setText(str);
+                if(keybord != null)
+                    sendMessage.setReplyMarkup(keybord);
+
+                try {
+                    execute(sendMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            sendMessage.setText(sendMsgText);
+            if(keybord != null)
+                sendMessage.setReplyMarkup(keybord);
+
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
 
