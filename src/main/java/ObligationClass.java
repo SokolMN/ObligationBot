@@ -2,6 +2,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.awt.image.AreaAveragingScaleFilter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -201,5 +203,14 @@ public class ObligationClass {
                     obligationInfoMap.get("COUPONDATE").getValue().substring(5, 7) +"." + obligationInfoMap.get("COUPONDATE").getValue().substring(0,4);
         }
 
+    }
+
+    public Date getConvertedDateClassCouponDate(){
+        try {
+            return new SimpleDateFormat("dd.MM.yyyy").parse(getConvertedCouponDate());
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

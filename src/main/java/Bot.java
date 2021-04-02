@@ -165,10 +165,10 @@ public class Bot extends TelegramLongPollingBot {
 
 
     public String getBotUsername() {
-        return "CoolSokolovBot";
+        return "SokolObligationBot"; //"CoolSokolovBot";
     }
 
     public String getBotToken() {
-        return "797703954:AAE0JA9ktlYExq4FQjFmUSgg133XwX8cIeI";
+        return "1577325548:AAFNP8Ihs1wuWxdCtfXTUR2rvprc24YqLLY"; //"797703954:AAE0JA9ktlYExq4FQjFmUSgg133XwX8cIeI";
     }
 }

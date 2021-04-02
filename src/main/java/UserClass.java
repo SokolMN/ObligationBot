@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import static java.lang.Double.doubleToLongBits;
 import static java.lang.Double.parseDouble;
 
 public class UserClass {
@@ -74,7 +75,7 @@ public class UserClass {
 
         DBWorker dbWorker = new DBWorker();
         dbWorker.selectRecord("select name, coupon_date, CURRENCY, code,coupon_Date, QUANTITY, coupon_sum from obligation  where user_id = '"
-                + this.getUserId() + "' order by coupon_date");
+                + this.getUserId() + "'" /*order by coupon_date*"*/);
 
         while(dbWorker.resultSet.next()){
             oblArray.add(new ObligationClass(dbWorker.resultSet.getString("CODE"),
@@ -87,7 +88,8 @@ public class UserClass {
         }
 
         int i=1;
-        for(ObligationClass obligation : oblArray ){
+        int k=0; //Для индексации листа с облигациями, чтобы изменить её при обновлении через API
+        for(ObligationClass obligation : oblArray ) {
 
             try {
                 couponDate = new SimpleDateFormat("yyyy-MM-dd").parse(obligation.getCouponDate());
@@ -96,16 +98,24 @@ public class UserClass {
             }
             int compareDateResult = currentDate.compareTo(couponDate);
 
-            if(compareDateResult>0){ //Если текущая дата больше даты из селекта облигации
+            if (compareDateResult > 0) { //Если текущая дата больше даты из селекта облигации
                 obligation = new ObligationClass(obligation.getObligationCode(), obligation.getQuantity());
                 updateMap.put("COUPON_DATE", obligation.getCouponDate());
-                reqMap.put("USER_ID", this.userId +"");
+                reqMap.put("USER_ID", this.userId + "");
                 reqMap.put("CODE", obligation.getObligationCode());
                 obligation.updateObligation(updateMap, reqMap);
+                oblArray.set(k, obligation);
             }
+        }
+
+
+        sortObligatinByDate(oblArray);
+
+
+        for(ObligationClass obligation : oblArray ) {
             totalPayments = totalPayments + i + ".Название: " + obligation.getObligationFullName() + "\n" +
-                                                "     Дата выплаты: " + obligation.getConvertedCouponDate()  + "\n" +
-                                                "     Сумма выплаты: " + new BigDecimal(parseDouble(obligation.getCouponSum())*obligation.getQuantity()).setScale(2, RoundingMode.UP) + " " + obligation.getConvertedCurrency() + "\n" ;
+                    "     Дата выплаты: " + obligation.getConvertedCouponDate()  + "\n" +
+                    "     Сумма выплаты: " + new BigDecimal(parseDouble(obligation.getCouponSum())*obligation.getQuantity()).setScale(2, RoundingMode.UP) + " " + obligation.getConvertedCurrency() + "\n" ;
             i++;
             lastDateOffAllCoupons = obligation.getConvertedCouponDate();
             totalSumByLastDate = totalSumByLastDate + (parseDouble(obligation.getCouponSum())*obligation.getQuantity());
@@ -113,6 +123,74 @@ public class UserClass {
 
         totalPayments = totalPayments + "\n" + "Итого к " + lastDateOffAllCoupons + ": " + new BigDecimal(totalSumByLastDate).setScale(2, RoundingMode.UP);
         return totalPayments;
+    }
+
+
+
+    private static ArrayList<ObligationClass> sortObligatinByDate(ArrayList<ObligationClass> oblArray) {
+        ArrayList<ObligationClass> leftList = new ArrayList<>();
+        ArrayList<ObligationClass> rightList = new ArrayList<>();
+        ArrayList<ObligationClass> totalList = new ArrayList<>();
+        int i = 0;
+        int j = oblArray.size() - 1;
+        Date date1 = null, date2=null;
+
+
+
+        if (oblArray.size() < 2) {
+            return oblArray;
+        } else if (oblArray.size() == 2) {
+            try {
+                date1 = new SimpleDateFormat("dd.mm.yyyy").parse(oblArray.get(0).getConvertedCouponDate());
+                date2 = new SimpleDateFormat("dd.mm.yyyy").parse(oblArray.get(1).getConvertedCouponDate());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if (date1.compareTo(date2) > 0) {
+
+                ObligationClass tmp = oblArray.get(0);
+                oblArray.set(0, oblArray.get(1));
+                oblArray.set(1, tmp);
+            }
+            return oblArray;
+        } else {
+            int mainIndex = oblArray.size() / 2;
+            ObligationClass mainItem = oblArray.get(mainIndex);
+
+            date1 = oblArray.get(i).getConvertedDateClassCouponDate();
+            date2 = oblArray.get(j).getConvertedDateClassCouponDate();
+
+
+            while (i < j) {
+                while (oblArray.get(i).getConvertedDateClassCouponDate().compareTo(mainItem.getConvertedDateClassCouponDate()) < 0) {
+                    leftList.add(oblArray.get(i));
+                    i++;
+                }
+
+                while (oblArray.get(j).getConvertedDateClassCouponDate().compareTo(mainItem.getConvertedDateClassCouponDate()) > 0) {
+                    rightList.add(oblArray.get(j));
+                    j--;
+                }
+
+                if (i <= j) {
+                    ObligationClass tmp = oblArray.get(i);
+                    oblArray.set(i, oblArray.get(j));
+                    oblArray.set(j, tmp);
+                    leftList.add(oblArray.get(i));
+                    rightList.add(oblArray.get(j));
+                    i++;
+                    j--;
+                }
+                //   System.out.println(list.toString());
+
+            }
+
+            totalList.addAll(sortObligatinByDate(leftList));
+            totalList.addAll(sortObligatinByDate(rightList));
+
+
+            return totalList;
+        }
     }
 
     public Long getChatId(){
