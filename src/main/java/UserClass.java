@@ -14,6 +14,8 @@ public class UserClass {
     private String fullName; //ФИО пользователя
     private Long chatId; //Чат Id пользователя
     private Integer userId; //Id пользователя
+    private static HashMap<String, ArrayList<ObligationClass>> debugMap = new HashMap<>();
+    private static int debugCount = 0;
 
 
     UserClass(String fullName, Long chatId){
@@ -109,8 +111,8 @@ public class UserClass {
         }
 
 
-        sortObligatinByDate(oblArray);
-
+        oblArray = sortObligatinByDate(oblArray);
+        debugMap.put(debugCount+++"", new ArrayList<ObligationClass>());
 
         for(ObligationClass obligation : oblArray ) {
             totalPayments = totalPayments + i + ".Название: " + obligation.getObligationFullName() + "\n" +
@@ -133,43 +135,50 @@ public class UserClass {
         ArrayList<ObligationClass> totalList = new ArrayList<>();
         int i = 0;
         int j = oblArray.size() - 1;
-        Date date1 = null, date2=null;
+        Date date1 = null, date2=null, dateIntem;
 
 
 
         if (oblArray.size() < 2) {
             return oblArray;
         } else if (oblArray.size() == 2) {
-            try {
-                date1 = new SimpleDateFormat("dd.mm.yyyy").parse(oblArray.get(0).getConvertedCouponDate());
-                date2 = new SimpleDateFormat("dd.mm.yyyy").parse(oblArray.get(1).getConvertedCouponDate());
-            } catch (ParseException e) {
-                e.printStackTrace();
+            date1 = oblArray.get(0).getConvertedDateClassCouponDate();
+            date2 = oblArray.get(1).getConvertedDateClassCouponDate();
+            if(date2.compareTo(date1) < 0){
+                ObligationClass tmp = oblArray.get(i);
+                oblArray.set(i, oblArray.get(j));
+                oblArray.set(j, tmp);
             }
-            if (date1.compareTo(date2) > 0) {
 
-                ObligationClass tmp = oblArray.get(0);
-                oblArray.set(0, oblArray.get(1));
-                oblArray.set(1, tmp);
-            }
+
             return oblArray;
         } else {
             int mainIndex = oblArray.size() / 2;
             ObligationClass mainItem = oblArray.get(mainIndex);
 
-            date1 = oblArray.get(i).getConvertedDateClassCouponDate();
-            date2 = oblArray.get(j).getConvertedDateClassCouponDate();
+            dateIntem = mainItem.getConvertedDateClassCouponDate();
+
 
 
             while (i < j) {
-                while (oblArray.get(i).getConvertedDateClassCouponDate().compareTo(mainItem.getConvertedDateClassCouponDate()) < 0) {
+                date1 = oblArray.get(i).getConvertedDateClassCouponDate();
+                date2 = oblArray.get(j).getConvertedDateClassCouponDate();
+                while (date1.before(dateIntem)) {
                     leftList.add(oblArray.get(i));
                     i++;
+                    date1 = oblArray.get(i).getConvertedDateClassCouponDate();
                 }
 
-                while (oblArray.get(j).getConvertedDateClassCouponDate().compareTo(mainItem.getConvertedDateClassCouponDate()) > 0) {
+                while (date2.after(dateIntem) && !date1.before(dateIntem)) {
+
                     rightList.add(oblArray.get(j));
                     j--;
+                    try {
+                        date2 = oblArray.get(j).getConvertedDateClassCouponDate();
+                    }catch (ArrayIndexOutOfBoundsException e){
+                        break;
+                    }
+
                 }
 
                 if (i <= j) {
@@ -185,9 +194,13 @@ public class UserClass {
 
             }
 
+            debugMap.put(debugCount++ + "leftList", leftList);
+            debugMap.put(debugCount++ + "rightList",rightList);
+
+
             totalList.addAll(sortObligatinByDate(leftList));
             totalList.addAll(sortObligatinByDate(rightList));
-
+            debugMap.put(debugCount++ + "totalList", totalList);
 
             return totalList;
         }
